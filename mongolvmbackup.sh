@@ -147,7 +147,7 @@ date=`date +%F_%H%M`
 targetfile="${volume}-${date}-snap.${COMPRESS_SUFFIX}"
 
 # Get the MDB version
-MDBVERSION=`mongo --eval "db.version()" | awk 'NR==3' | tr -d "."`
+MDBVERSION=`mongo --eval "db.version()" | grep "MongoDB server version: " | tr -d "MongoDB server version: " | tr -d "."`
 # Get the MDB engine
 MDBENGINE=`mongo $OPTION --eval "printjson(db.serverStatus().storageEngine)" | grep -oP wiredTiger`
 
@@ -190,24 +190,24 @@ else
     echo "Freezing MongoDB before LVM snapshot"
     mongo $OPTION -eval "printjson(db.fsyncLock())"
     IsFSYNCLOCKON=`mongo $OPTION -eval "printjson(db.currentOp())" | grep -oP fsyncLock`
-    if [ ! $IsFSYNCLOCKON ]; 
+    if [ ! $IsFSYNCLOCKON ];
     then
       echo "fsyncLock is OFF yet! "
       exit 1
     fi
-    
+
     # CREATE THE SNAPSHOT
     create_lvsnap
-    
+
     echo "Snapshot OK; unfreezing DB"
     mongo $OPTION -eval "db.fsyncUnlock()"
     echo
-    echo    
+    echo
 fi
 
 
 # fix bug: lvcreate snapshot mount by uuid as shown on url: http://www.zero-effort.net/tip-of-the-day-mounting-an-xfs-lvm-snapshot/
-xfs_repair -L "/dev/${vgroup}/${snapvol}" >/dev/null 2>&1 
+xfs_repair -L "/dev/${vgroup}/${snapvol}" >/dev/null 2>&1
 
 # Mount the snapshot
 mountpoint=`mktemp -t -d mount.mongolvmbackup_XXX`
