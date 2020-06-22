@@ -189,7 +189,7 @@ else
     echo "$MDBVERLIMIT < $MDBVERSION and the engine is $MDBENGINE so fsyncLock is required!"
     echo "Freezing MongoDB before LVM snapshot"
     mongo $OPTION -eval "printjson(db.fsyncLock())"
-    IsFSYNCLOCKON=`mongo $OPTION -eval "printjson(db.currentOp())" | grep -oP fsyncLock`
+    IsFSYNCLOCKON=`mongo $OPTION -eval "printjson(db.currentOp())" | grep -oP '"fsyncLock" : true' | tr -d '"fsyncLock" : '`
     if [ ! $IsFSYNCLOCKON ];
     then
       echo "fsyncLock is OFF yet! "
